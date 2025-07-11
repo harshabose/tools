@@ -17,9 +17,7 @@ type Buffer[T any] interface {
 }
 
 type BufferWithGenerator[T any] interface {
-	Push(context.Context, T) error
-	Pop(ctx context.Context) (T, error)
-	Size() int
+	Buffer[T]
 	Generate() T
 	PutBack(T)
 	GetChannel() chan T
