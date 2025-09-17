@@ -8,24 +8,24 @@ import (
 	"time"
 )
 
-type ClientState int
+type State int
 
 const (
-	ClientStateDisconnected ClientState = iota
-	ClientStateConnecting
-	ClientStateConnected
-	ClientStateError
+	DisconnectedState State = iota
+	ConnectingState
+	ConnectedState
+	ErrorState
 )
 
-func (cs ClientState) String() string {
+func (cs State) String() string {
 	switch cs {
-	case ClientStateDisconnected:
+	case DisconnectedState:
 		return "Disconnected"
-	case ClientStateConnecting:
+	case ConnectingState:
 		return "Connecting"
-	case ClientStateConnected:
+	case ConnectedState:
 		return "Connected"
-	case ClientStateError:
+	case ErrorState:
 		return "Error"
 	default:
 		return "Unknown"
@@ -71,7 +71,7 @@ func (be *BufferedErrors) MarshalJSON() ([]byte, error) {
 	return json.Marshal(be.errors)
 }
 
-type MetricsSnapshot struct {
+type Snapshot struct {
 	State            string          `json:"state"`
 	PacketsRead      uint64          `json:"packetsRead"`
 	PacketsWritten   uint64          `json:"packetsWritten"`
@@ -84,9 +84,17 @@ type MetricsSnapshot struct {
 	RecentErrors     *BufferedErrors `json:"recentErrors"`
 }
 
+func (s *Snapshot) Marshal() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s *Snapshot) Unmarshal(data []byte) error {
+	return json.Unmarshal(data, s)
+}
+
 type UnifiedMetrics struct {
 	// Basic state
-	state          ClientState
+	state          State
 	packetsRead    uint64
 	packetsWritten uint64
 	bytesRead      uint64
@@ -113,7 +121,7 @@ type UnifiedMetrics struct {
 func NewUnifiedMetrics(ctx context.Context, serviceTitle string, maxErrorBuffer int, tickerInterval time.Duration) *UnifiedMetrics {
 	ctx2, cancel := context.WithCancel(ctx)
 	m := &UnifiedMetrics{
-		state:          ClientStateDisconnected,
+		state:          DisconnectedState,
 		recentErrors:   NewBufferedErrors(maxErrorBuffer),
 		serviceTitle:   serviceTitle,
 		tickerInterval: tickerInterval,
@@ -163,7 +171,7 @@ func (m *UnifiedMetrics) updateRatesAndPrint() {
 	m.printFormattedMetrics(snapshot)
 }
 
-func (m *UnifiedMetrics) printFormattedMetrics(snapshot MetricsSnapshot) {
+func (m *UnifiedMetrics) printFormattedMetrics(snapshot Snapshot) {
 	divider := "================================================"
 
 	fmt.Printf("\n%s\n", divider)
@@ -236,13 +244,13 @@ func (m *UnifiedMetrics) Close() error {
 	return nil
 }
 
-func (m *UnifiedMetrics) SetState(state ClientState) {
+func (m *UnifiedMetrics) SetState(state State) {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 	m.state = state
 }
 
-func (m *UnifiedMetrics) GetState() ClientState {
+func (m *UnifiedMetrics) GetState() State {
 	m.mux.RLock()
 	defer m.mux.RUnlock()
 	return m.state
@@ -312,11 +320,11 @@ func (m *UnifiedMetrics) AddErrors(errs ...error) {
 	}
 }
 
-func (m *UnifiedMetrics) GetSnapshot() MetricsSnapshot {
+func (m *UnifiedMetrics) GetSnapshot() Snapshot {
 	m.mux.RLock()
 	defer m.mux.RUnlock()
 
-	snapshot := MetricsSnapshot{
+	snapshot := Snapshot{
 		State:            m.state.String(),
 		PacketsRead:      m.packetsRead,
 		PacketsWritten:   m.packetsWritten,
