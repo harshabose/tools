@@ -18,6 +18,10 @@ func NewSet[T comparable](items ...T) *Set[T] {
 }
 
 func (s *Set[T]) Add(items ...T) {
+	if len(items) == 0 {
+		return
+	}
+
 	for _, item := range items {
 		s.items[item] = exists
 	}

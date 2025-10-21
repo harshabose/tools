@@ -51,7 +51,7 @@ func (buffer *ChannelBuffer[T]) Pop(ctx context.Context) (T, error) {
 	var zero T
 
 	if buffer.closed {
-		return zero, errors.New("buffer closed")
+		return zero, ErrorChannelBufferClose
 	}
 	select {
 	case <-ctx.Done():
