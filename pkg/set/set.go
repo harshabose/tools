@@ -49,6 +49,23 @@ func (s *Set[T]) Size() int {
 	return len(s.items)
 }
 
+func (s *Set[T]) Exists(item T) bool {
+	if _, e := s.items[item]; !e {
+		return false
+	}
+
+	return true
+}
+
+func (s *Set[T]) ExistsIf(f func(T) bool) bool {
+	for item := range s.items {
+		if f(item) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Set[T]) Clear() {
 	s.items = make(map[T]struct{})
 }

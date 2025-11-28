@@ -129,10 +129,12 @@ func NewUnifiedMetrics(ctx context.Context, serviceTitle string, maxErrorBuffer 
 		cancel:         cancel,
 	}
 
+	return m
+}
+
+func (m *UnifiedMetrics) Start() {
 	m.wg.Add(1)
 	go m.loop()
-
-	return m
 }
 
 func (m *UnifiedMetrics) loop() {
