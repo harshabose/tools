@@ -12,13 +12,19 @@ type Pool[T any] interface {
 
 type Buffer[T any] interface {
 	Push(context.Context, T) error
-	Pop(ctx context.Context) (T, error)
+	Pop(context.Context) (T, error)
 	Size() int
-	GetChannel() chan T
+	Close()
+}
+
+type PeekBuffer[T any] interface {
+	Buffer[T]
+	TryPush(T) bool
+	TryPop() (T, bool)
 }
 
 type BufferWithGenerator[T any] interface {
 	Buffer[T]
-	Generate() T
-	PutBack(T)
+	Get() T
+	Put(T)
 }
