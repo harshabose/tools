@@ -14,18 +14,18 @@ type framePool struct {
 
 func CreateFramePool() Pool[*astiav.Frame] {
 	return &framePool{
-		pool: sync.Pool{
-			New: func() any {
-				return astiav.AllocFrame()
-			},
-		},
+		pool: sync.Pool{},
 	}
 }
 
 func (pool *framePool) Get() *astiav.Frame {
-	frame, ok := pool.pool.Get().(*astiav.Frame)
+	v := pool.pool.Get()
+	if v == nil {
+		return astiav.AllocFrame()
+	}
 
-	if frame == nil || !ok {
+	frame, ok := v.(*astiav.Frame)
+	if !ok {
 		return astiav.AllocFrame()
 	}
 	return frame
@@ -42,10 +42,12 @@ func (pool *framePool) Put(frame *astiav.Frame) {
 
 func (pool *framePool) Release() {
 	for {
-		frame, ok := pool.pool.Get().(*astiav.Frame)
-		if frame == nil {
+		v := pool.pool.Get()
+		if v == nil {
 			break
 		}
+
+		frame, ok := v.(*astiav.Frame)
 		if !ok {
 			continue
 		}

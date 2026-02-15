@@ -14,18 +14,18 @@ type packetPool struct {
 
 func CreatePacketPool() Pool[*astiav.Packet] {
 	return &packetPool{
-		pool: sync.Pool{
-			New: func() any {
-				return astiav.AllocPacket()
-			},
-		},
+		pool: sync.Pool{},
 	}
 }
 
 func (pool *packetPool) Get() *astiav.Packet {
-	packet, ok := pool.pool.Get().(*astiav.Packet)
+	v := pool.pool.Get()
+	if v == nil {
+		return astiav.AllocPacket()
+	}
 
-	if packet == nil || !ok {
+	packet, ok := v.(*astiav.Packet)
+	if !ok {
 		return astiav.AllocPacket()
 	}
 	return packet
@@ -42,14 +42,16 @@ func (pool *packetPool) Put(packet *astiav.Packet) {
 
 func (pool *packetPool) Release() {
 	for {
-		packet, ok := pool.pool.Get().(*astiav.Packet)
-		if packet == nil {
+		v := pool.pool.Get()
+		if v == nil {
 			break
 		}
+
+		packet, ok := v.(*astiav.Packet)
 		if !ok {
 			continue
 		}
-		// fmt.Printf("🗑️ Releasing packet: ptr=%p\n", packet)
+
 		packet.Free()
 	}
 }

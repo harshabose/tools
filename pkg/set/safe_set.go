@@ -74,3 +74,24 @@ func (s *SafeSet[T]) Items() []T {
 
 	return s.Set.Items()
 }
+
+func (s *SafeSet[T]) ForEach(f func(T)) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	s.Set.ForEach(f)
+}
+
+func (s *SafeSet[T]) ForExistsIf(f func(T), i ...T) bool {
+	s.mux.Lock()
+	defer s.mux.RUnlock()
+
+	return s.Set.ForExistsIf(f, i...)
+}
+
+func (s *SafeSet[T]) Close(f func(T)) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	s.Set.Close(f)
+}

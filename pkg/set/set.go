@@ -80,3 +80,47 @@ func (s *Set[T]) Items() []T {
 
 	return items
 }
+
+func (s *Set[T]) ForEach(f func(T)) {
+	if f == nil {
+		return
+	}
+
+	for item := range s.items {
+		f(item)
+	}
+}
+
+func (s *Set[T]) ForExistsIf(f func(T), i ...T) bool {
+	if f == nil {
+		return false
+	}
+
+	all := true
+	for _, item := range i {
+		exits := s.Exists(item)
+		if exits {
+			f(item)
+			continue
+		}
+
+		all = false
+	}
+
+	return all
+}
+
+func (s *Set[T]) Close(f func(T)) {
+	s.ForEach(f)
+	s.Clear()
+}
+
+func (s *Set[T]) Get(f func(T) bool) (T, bool) {
+	for item := range s.items {
+		if f(item) {
+			return item, true
+		}
+	}
+	var zero T
+	return zero, false
+}
