@@ -30,6 +30,10 @@ func (m *Mux) Lock(ctx context.Context) error {
 	}
 }
 
+func (m *Mux) LockCh() <-chan struct{} {
+	return m.semaphore
+}
+
 func (m *Mux) Unlock() {
 	m.semaphore <- struct{}{}
 }
